@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Perjalanan Bombardilo</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+</head>
+
+<body>
+    <div id="game-container">
+        <canvas id="gameCanvas" width="800" height="600"></canvas>
+        <div id="ui-layer">
+            <!-- Tombol mute di pojok kanan atas -->
+            <button id="mute-btn" title="Toggle Music">🔊</button>
+
+            <!-- Title / Start Screen -->
+            <div id="title-screen">
+                <h1>Perjalanan Bombardilo</h1>
+                <p class="subtitle">Pilih Kesulitan:</p>
+                <div id="difficulty-buttons">
+                    <button class="diff-btn" data-diff="easy">🟢 Easy</button>
+                    <button class="diff-btn active" data-diff="normal">🟡 Normal</button>
+                    <button class="diff-btn" data-diff="hard">🔴 Hard</button>
+                </div>
+                <p class="start-hint">Press SPACE or Click to Start</p>
+                <p id="tap-hint">Tap Screen to Start</p>
+            </div>
+
+            <!-- Score saat main -->
+            <div id="score-display" class="hidden">Score: <span id="score-val">0</span></div>
+
+            <!-- Game Over Screen -->
+            <div id="game-over-screen" class="hidden">
+                <h1 id="game-over-title">Game Over!</h1>
+                <p id="game-over-message">Score: <span id="final-score">0</span></p>
+                <p>Press SPACE or Click to Restart</p>
+            </div>
+        </div>
+    </div>
+    <script src="script.js"></script>
+</body>
+
+</html>

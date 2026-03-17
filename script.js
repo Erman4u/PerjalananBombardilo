@@ -19,6 +19,7 @@ const assets = {
     croc: new Image(),
     cloud: new Image(),
     rainbow: new Image(),
+    petir: new Image(),
     bgs: [],
     mbgs: []
 };
@@ -36,9 +37,10 @@ let currentBgIdx = 0; // index ke BG array
 assets.croc.src  = 'img/buaya.png';
 assets.cloud.src = 'img/awan.png';
 assets.rainbow.src = 'img/pelangi.png';
+assets.petir.src = 'img/Petir.png';
 
 let assetsLoaded = 0;
-const totalAssets = 3 + 12; // croc, cloud, rainbow + 6 bgs + 6 mbgs
+const totalAssets = 4 + 12; // croc, cloud, rainbow, petir + 6 bgs + 6 mbgs
 
 const checkLoad = () => {
     assetsLoaded++;
@@ -51,6 +53,7 @@ const handleLoadError = () => { console.error("Asset load failed"); checkLoad();
 assets.croc.onload  = checkLoad; assets.croc.onerror  = handleLoadError;
 assets.cloud.onload = checkLoad; assets.cloud.onerror = handleLoadError;
 assets.rainbow.onload = checkLoad; assets.rainbow.onerror = handleLoadError;
+assets.petir.onload = checkLoad; assets.petir.onerror = handleLoadError;
 
 for(let i=0; i<6; i++) {
     assets.bgs[i].onload = checkLoad; assets.bgs[i].onerror = handleLoadError;
@@ -101,7 +104,7 @@ document.querySelectorAll('.diff-btn').forEach(btn => {
 });
 
 // ─── Game State ────────────────────────────────────────────
-let gameState = 'LOADING'; // LOADING | START | PLAYING | GAME_OVER
+let gameState = 'LOADING'; // LOADING | START | PLAYING | GAME_OVER | WIN
 let frames    = 0;
 let score     = 0;          // score berdasarkan jarak (frame)
 let obstacles = [];
@@ -154,40 +157,61 @@ const croc = {
 
 // ─── Obstacles ─────────────────────────────────────────────
 function spawnObstacle() {
-    // Ukuran awan responsive
+    // Ukuran awan konstan / standar sebagai basis
     const scale = Math.min(canvas.width / 800, 1);
-    let cloudWidth  = (120 + Math.random() * 60) * Math.max(scale, 0.6);
-    let cloudHeight = cloudWidth * 0.6;
-    let yPos        = Math.random() * (canvas.height - cloudHeight);
-    let hasRainbow  = Math.random() < 0.2; // 20% chance
-    obstacles.push({ x: canvas.width, y: yPos, width: cloudWidth, height: cloudHeight, hasRainbow: hasRainbow });
+    let baseWidth  = (120 + Math.random() * 60) * Math.max(scale, 0.6);
+    let baseHeight = baseWidth * 0.6;
+    let yPos       = Math.random() * (canvas.height - baseHeight);
+    
+    // Tentukan tipe obstacle
+    let type = 'cloud';
+    if (Math.random() < 0.25) {
+        // 25% chance of special obstacle
+        if (currentBgIdx === 1 || currentBgIdx === 3) {
+            type = 'lightning'; // bg2 dan bg4
+        } else {
+            type = 'rainbow';
+        }
+    }
+
+    if (type === 'lightning') {
+        // Petir ukurannya lebih ramping dan tinggi
+        let pWidth = baseWidth * 0.6;
+        let pHeight = pWidth * 2;
+        yPos = Math.random() * (canvas.height - pHeight);
+        obstacles.push({ type: 'lightning', x: canvas.width, y: yPos, width: pWidth, height: pHeight });
+    } else if (type === 'rainbow') {
+        // Rainbow ukurannya kurang lebih mirip awan base tapi di-render beda
+        obstacles.push({ type: 'rainbow', x: canvas.width, y: yPos, width: baseWidth, height: baseHeight });
+    } else {
+        obstacles.push({ type: 'cloud', x: canvas.width, y: yPos, width: baseWidth, height: baseHeight });
+    }
 }
 
 function drawObstacles() {
     for (let obs of obstacles) {
-        // Draw rainbow menyatu dengan awan jika ada (di bawah awan)
-        if (obs.hasRainbow && assets.rainbow.complete && assets.rainbow.naturalWidth !== 0 && assets.cloud.complete) {
-            // Ukuran pelangi disesuaikan
-            let rWidth = obs.width * 1.1; 
-            let rHeight = obs.height * 1.1;
-            let rX = obs.x - (rWidth - obs.width) / 2;
-            let rY = obs.y - (rHeight - obs.height) / 1.1; // sedikit di atas awan (awan utama di tengah)
+        if (obs.type === 'rainbow' && assets.rainbow.complete && assets.rainbow.naturalWidth !== 0 && assets.cloud.complete) {
+            // Gambar Pelangi Mandiri
+            let rWidth = obs.width * 1.5; 
+            let rHeight = obs.height * 1.5;
+            let rX = obs.x;
+            let rY = obs.y; 
             ctx.drawImage(assets.rainbow, rX, rY, rWidth, rHeight);
 
-            // Awan di ujung kiri pelangi
-            ctx.drawImage(assets.cloud, rX - obs.width*0.3, rY + rHeight*0.6, obs.width*0.8, obs.height*0.8);
-            // Awan di ujung kanan pelangi
-            ctx.drawImage(assets.cloud, rX + rWidth - obs.width*0.5, rY + rHeight*0.6, obs.width*0.8, obs.height*0.8);
-        }
-
-        // Gambar awan utama di tengah (selalu ada)
-        if (assets.cloud.complete && assets.cloud.naturalWidth !== 0) {
+            // Awan kecil di ujung kaki kiri pelangi
+            ctx.drawImage(assets.cloud, rX - obs.width*0.2, rY + rHeight*0.6, obs.width*0.8, obs.height*0.8);
+            // Awan kecil di ujung kaki kanan pelangi
+            ctx.drawImage(assets.cloud, rX + rWidth - rWidth*0.35, rY + rHeight*0.6, obs.width*0.8, obs.height*0.8);
+        } else if (obs.type === 'lightning' && assets.petir.complete && assets.petir.naturalWidth !== 0) {
+            // Gambar Petir
+            ctx.drawImage(assets.petir, obs.x, obs.y, obs.width, obs.height);
+        } else if (obs.type === 'cloud' && assets.cloud.complete && assets.cloud.naturalWidth !== 0) {
+            // Gambar Awan
             ctx.drawImage(assets.cloud, obs.x, obs.y, obs.width, obs.height);
         } else {
-            ctx.fillStyle = '#fff';
-            ctx.beginPath();
-            ctx.arc(obs.x + obs.width / 2, obs.y + obs.height / 2, obs.height / 2, 0, Math.PI * 2);
-            ctx.fill();
+            // Fallback
+            ctx.fillStyle = obs.type === 'lightning' ? 'yellow' : (obs.type === 'rainbow' ? 'magenta' : 'white');
+            ctx.fillRect(obs.x, obs.y, obs.width, obs.height);
         }
     }
 }
@@ -203,27 +227,35 @@ function updateObstacles() {
         let obs = obstacles[i];
         obs.x  -= SCROLL_SPEED;
 
-        // Hitbox padding awan (lebih longgar tapi harus proporsional untuk responsif HP)
         const px = croc.width * 0.22;
         const py = croc.height * 0.28;
         
-        // Cek tabrakan awan utama
-        let hitCloud = (
-            croc.x + px         < obs.x + obs.width  - px &&
-            croc.x + croc.width - px > obs.x + px          &&
-            croc.y + py         < obs.y + obs.height - py  &&
-            croc.y + croc.height - py > obs.y + py
-        );
+        let collided = false;
 
-        let hitRainbow = false;
-        if (obs.hasRainbow) {
+        if (obs.type === 'cloud') {
+            collided = (
+                croc.x + px         < obs.x + obs.width  - px &&
+                croc.x + croc.width - px > obs.x + px          &&
+                croc.y + py         < obs.y + obs.height - py  &&
+                croc.y + croc.height - py > obs.y + py
+            );
+        } else if (obs.type === 'lightning') {
+            // Hitbox petir sedikit lebih pemaaf di sisi kiri/kanan karena bentuk aslinya
+            const petirPx = obs.width * 0.15;
+            collided = (
+                croc.x + px         < obs.x + obs.width  - petirPx &&
+                croc.x + croc.width - px > obs.x + petirPx          &&
+                croc.y + py         < obs.y + obs.height - 10  &&
+                croc.y + croc.height - py > obs.y + 10
+            );
+        } else if (obs.type === 'rainbow') {
+            let rWidth = obs.width * 1.5; 
+            let rHeight = obs.height * 1.5;
+            let rX = obs.x;
+            let rY = obs.y;
+
             // Hitbox pelangi
-            let rWidth = obs.width * 1.1; 
-            let rHeight = obs.height * 1.1;
-            let rX = obs.x - (rWidth - obs.width) / 2;
-            let rY = obs.y - (rHeight - obs.height) / 1.1;
-
-            hitRainbow = (
+            let hitRainbow = (
                 croc.x + px         < rX + rWidth  - px &&
                 croc.x + croc.width - px > rX + px          &&
                 croc.y + py         < rY + rHeight - py  &&
@@ -231,8 +263,8 @@ function updateObstacles() {
             );
 
             // Hitbox 2 awan kecil di ujung
-            let lhX = rX - obs.width*0.3; let lhY = rY + rHeight*0.6; let lhW = obs.width*0.8; let lhH = obs.height*0.8;
-            let rhX = rX + rWidth - obs.width*0.5; let rhY = rY + rHeight*0.6; let rhW = obs.width*0.8; let rhH = obs.height*0.8;
+            let lhX = rX - obs.width*0.2; let lhY = rY + rHeight*0.6; let lhW = obs.width*0.8; let lhH = obs.height*0.8;
+            let rhX = rX + rWidth - rWidth*0.35; let rhY = rY + rHeight*0.6; let rhW = obs.width*0.8; let rhH = obs.height*0.8;
 
             let hitLeftCloud = (
                 croc.x + px         < lhX + lhW  - px &&
@@ -248,14 +280,14 @@ function updateObstacles() {
                 croc.y + croc.height - py > rhY + py
             );
 
-            if (hitLeftCloud || hitRightCloud) hitRainbow = true;
+            collided = hitRainbow || hitLeftCloud || hitRightCloud;
         }
 
-        if (hitCloud || hitRainbow) {
+        if (collided) {
             triggerGameOver();
         }
 
-        if (obs.x + obs.width < 0) { obstacles.splice(i, 1); i--; }
+        if (obs.x + (obs.type === 'rainbow' ? obs.width*1.5 : obs.width) < 0) { obstacles.splice(i, 1); i--; }
     }
 }
 
@@ -265,11 +297,15 @@ function updateScore() {
         score++;
         document.getElementById('score-val').innerText = score;
 
-        // Ganti background setiap 500 poin, looping
-        let newIdx = Math.floor(score / 500) % 6;
+        // Ganti background setiap 200 poin, looping
+        let newIdx = Math.floor(score / 200) % 6;
         if (newIdx !== currentBgIdx) {
             currentBgIdx = newIdx;
             bgOffset = 0; // reset scroll saat ganti bg
+        }
+
+        if (score >= 1000 && gameState !== 'WIN') {
+            triggerWin();
         }
     }
 }
@@ -360,10 +396,17 @@ document.getElementById('game-over-screen').addEventListener('mousedown', (e) =>
 
 // ─── Game Over / Reset ─────────────────────────────────────
 function triggerGameOver() {
-    if (gameState === 'GAME_OVER') return;
+    if (gameState === 'GAME_OVER' || gameState === 'WIN') return;
     gameState = 'GAME_OVER';
     document.getElementById('game-over-screen').classList.remove('hidden');
     document.getElementById('final-score').innerText = score;
+    document.getElementById('score-display').classList.add('hidden');
+}
+
+function triggerWin() {
+    if (gameState === 'GAME_OVER' || gameState === 'WIN') return;
+    gameState = 'WIN';
+    document.getElementById('win-screen').classList.remove('hidden');
     document.getElementById('score-display').classList.add('hidden');
 }
 
@@ -377,6 +420,7 @@ function resetGame() {
     document.getElementById('score-val').innerText = 0;
     gameState = 'START';
     document.getElementById('game-over-screen').classList.add('hidden');
+    document.getElementById('win-screen').classList.add('hidden');
     document.getElementById('title-screen').classList.remove('hidden');
     bgMusic.currentTime = 0;
     bgMusic.play().catch(() => {});

@@ -80,6 +80,10 @@ canvas {
     box-sizing: border-box;
 }
 
+#win-screen { border-color: #ffd700; }
+#win-screen h1 { color: #ffd700; text-shadow: 2px 2px 0 #000; }
+#win-screen a { pointer-events: auto; }
+
 #title-screen h1 {
     margin: 0 0 14px 0;
     font-size: 1.2em;
@@ -124,7 +128,8 @@ canvas {
 }
 
 /* ─── Game Over ─── */
-#game-over-screen {
+#game-over-screen,
+#win-screen {
     background-color: rgba(0, 0, 0, 0.65);
     padding: 30px 40px;
     border: 4px solid #fff;
@@ -173,7 +178,8 @@ canvas {
     }
 
     #title-screen,
-    #game-over-screen {
+    #game-over-screen,
+#win-screen {
         padding: 20px 18px;
         border-width: 3px;
         border-radius: 10px;
@@ -186,12 +192,14 @@ canvas {
         word-break: break-word;
     }
 
-    #game-over-screen h1 {
+    #game-over-screen h1,
+#win-screen h1 {
         font-size: 0.75em;
         margin-bottom: 10px;
     }
 
-    #game-over-screen p {
+    #game-over-screen p,
+#win-screen p {
         font-size: 0.5em;
     }
 

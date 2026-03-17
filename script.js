@@ -183,7 +183,19 @@ function spawnObstacle(offsetX = 0) {
     const scale = Math.min(canvas.width / 800, 1);
     let baseWidth  = (120 + Math.random() * 60) * Math.max(scale, 0.6);
     let baseHeight = baseWidth * 0.6;
-    let yPos       = Math.random() * (canvas.height - baseHeight);
+    
+    // Distribusi yPos: 40% di sepertiga atas, 40% di sepertiga bawah, 20% di tengah
+    let edgeRoll = Math.random();
+    let yPos;
+    if (edgeRoll < 0.4) {
+        yPos = Math.random() * (canvas.height * 0.3);
+    } else if (edgeRoll < 0.8) {
+        yPos = canvas.height * 0.7 - baseHeight + Math.random() * (canvas.height * 0.3);
+    } else {
+        yPos = canvas.height * 0.3 + Math.random() * (canvas.height * 0.4 - baseHeight);
+    }
+    // Pastikan nilai Y tidak melampaui batas layar (clip ke dalam screen boundary)
+    yPos = Math.max(0, Math.min(canvas.height - baseHeight, yPos));
     
     // Tentukan tipe obstacle
     let type = 'cloud';

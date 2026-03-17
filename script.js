@@ -16,7 +16,7 @@ window.addEventListener('resize', resizeCanvas);
 
 // ─── Assets ───────────────────────────────────────────────
 const assets = {
-    croc: new Image(),
+    crocs: [], // Array untuk buaya level 0-4
     cloud: new Image(),
     rainbow: new Image(),
     petir: new Image(),
@@ -32,15 +32,22 @@ for(let i=0; i<6; i++) {
     assets.mbgs.push(new Image());
 }
 
+for(let i=0; i<5; i++) {
+    assets.crocs.push(new Image());
+}
+
 let currentBgIdx = 0; // index ke BG array
 
-assets.croc.src  = 'img/buaya.png';
+assets.crocs[0].src = 'img/buaya.png';
+for(let i=1; i<=4; i++) {
+    assets.crocs[i].src = `img/buaya${i}.png`;
+}
 assets.cloud.src = 'img/awan.png';
 assets.rainbow.src = 'img/pelangi.png';
 assets.petir.src = 'img/Petir.png';
 
 let assetsLoaded = 0;
-const totalAssets = 4 + 12; // croc, cloud, rainbow, petir + 6 bgs + 6 mbgs
+const totalAssets = 5 + 3 + 12; // 5 crocs + cloud, rainbow, petir + 6 bgs + 6 mbgs
 
 const checkLoad = () => {
     assetsLoaded++;
@@ -50,7 +57,10 @@ const checkLoad = () => {
 };
 const handleLoadError = () => { console.error("Asset load failed"); checkLoad(); };
 
-assets.croc.onload  = checkLoad; assets.croc.onerror  = handleLoadError;
+for(let i=0; i<5; i++) {
+    assets.crocs[i].onload = checkLoad; 
+    assets.crocs[i].onerror = handleLoadError;
+}
 assets.cloud.onload = checkLoad; assets.cloud.onerror = handleLoadError;
 assets.rainbow.onload = checkLoad; assets.rainbow.onerror = handleLoadError;
 assets.petir.onload = checkLoad; assets.petir.onerror = handleLoadError;
@@ -135,8 +145,12 @@ const croc = {
     },
 
     draw() {
-        if (assets.croc.complete && assets.croc.naturalWidth !== 0) {
-            ctx.drawImage(assets.croc, this.x, this.y, this.width, this.height);
+        // Upgrade croc setiap pergantian background (max index 4)
+        let crocLevel = Math.min(currentBgIdx, 4);
+        let activeCroc = assets.crocs[crocLevel];
+
+        if (activeCroc && activeCroc.complete && activeCroc.naturalWidth !== 0) {
+            ctx.drawImage(activeCroc, this.x, this.y, this.width, this.height);
         } else {
             ctx.fillStyle = 'green';
             ctx.fillRect(this.x, this.y, this.width, this.height);

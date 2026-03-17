@@ -156,7 +156,7 @@ const croc = {
 };
 
 // ─── Obstacles ─────────────────────────────────────────────
-function spawnObstacle() {
+function spawnObstacle(offsetX = 0) {
     // Ukuran awan konstan / standar sebagai basis
     const scale = Math.min(canvas.width / 800, 1);
     let baseWidth  = (120 + Math.random() * 60) * Math.max(scale, 0.6);
@@ -174,14 +174,16 @@ function spawnObstacle() {
         }
     }
 
+    let spawnX = canvas.width + offsetX;
+
     if (type === 'lightning') {
         // Petir menggunakan ukuran natural (proporsi awan, disamakan dulu kotaknya)
-        obstacles.push({ type: 'lightning', x: canvas.width, y: yPos, width: baseWidth, height: baseHeight });
+        obstacles.push({ type: 'lightning', x: spawnX, y: yPos, width: baseWidth, height: baseHeight });
     } else if (type === 'rainbow') {
         // Rainbow ukurannya kurang lebih mirip awan base tapi di-render beda
-        obstacles.push({ type: 'rainbow', x: canvas.width, y: yPos, width: baseWidth, height: baseHeight });
+        obstacles.push({ type: 'rainbow', x: spawnX, y: yPos, width: baseWidth, height: baseHeight });
     } else {
-        obstacles.push({ type: 'cloud', x: canvas.width, y: yPos, width: baseWidth, height: baseHeight });
+        obstacles.push({ type: 'cloud', x: spawnX, y: yPos, width: baseWidth, height: baseHeight });
     }
 }
 
@@ -217,7 +219,9 @@ function updateObstacles() {
     // Spawn
     if (frames > 0 && frames % Math.floor(SPAWN_RATE + (Math.random() * 20 - 10)) === 0) {
         spawnObstacle();
-        if (Math.random() < DOUBLE_CHANCE) spawnObstacle();
+        if (Math.random() < DOUBLE_CHANCE) {
+            spawnObstacle(400 + Math.random() * 200); // Beri jarak horizontal agar tidak numpuk
+        }
     }
 
     for (let i = 0; i < obstacles.length; i++) {

@@ -175,11 +175,8 @@ function spawnObstacle() {
     }
 
     if (type === 'lightning') {
-        // Petir ukurannya lebih ramping dan tinggi
-        let pWidth = baseWidth * 0.6;
-        let pHeight = pWidth * 2;
-        yPos = Math.random() * (canvas.height - pHeight);
-        obstacles.push({ type: 'lightning', x: canvas.width, y: yPos, width: pWidth, height: pHeight });
+        // Petir menggunakan ukuran natural (proporsi awan, disamakan dulu kotaknya)
+        obstacles.push({ type: 'lightning', x: canvas.width, y: yPos, width: baseWidth, height: baseHeight });
     } else if (type === 'rainbow') {
         // Rainbow ukurannya kurang lebih mirip awan base tapi di-render beda
         obstacles.push({ type: 'rainbow', x: canvas.width, y: yPos, width: baseWidth, height: baseHeight });
@@ -240,13 +237,14 @@ function updateObstacles() {
                 croc.y + croc.height - py > obs.y + py
             );
         } else if (obs.type === 'lightning') {
-            // Hitbox petir sedikit lebih pemaaf di sisi kiri/kanan karena bentuk aslinya
-            const petirPx = obs.width * 0.15;
+            // Hitbox petir kotak natural
+            const petirPx = obs.width * 0.22;
+            const petirPy = obs.height * 0.28;
             collided = (
                 croc.x + px         < obs.x + obs.width  - petirPx &&
                 croc.x + croc.width - px > obs.x + petirPx          &&
-                croc.y + py         < obs.y + obs.height - 10  &&
-                croc.y + croc.height - py > obs.y + 10
+                croc.y + py         < obs.y + obs.height - petirPy  &&
+                croc.y + croc.height - py > obs.y + petirPy
             );
         } else if (obs.type === 'rainbow') {
             let rWidth = obs.width * 1.5; 

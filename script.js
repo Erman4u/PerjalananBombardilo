@@ -161,8 +161,16 @@ const croc = {
         this.velocity += GRAVITY_VAL;
         this.y        += this.velocity;
 
-        if (this.y + this.height >= canvas.height || this.y <= 0) {
-            triggerGameOver();
+        // Batas lantai (bawah)
+        if (this.y + this.height >= canvas.height) {
+            this.y = canvas.height - this.height;
+            this.velocity = 0;
+        }
+        
+        // Batas langit (atas)
+        if (this.y <= 0) {
+            this.y = 0;
+            this.velocity = 0;
         }
     },
 

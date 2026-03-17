@@ -338,6 +338,9 @@ function updateScore() {
         if (newIdx !== currentBgIdx) {
             currentBgIdx = newIdx;
             bgOffset = 0; // reset scroll saat ganti bg
+
+            // Tembah tingkat kesulitan setiap 200 poin (Awan makin sering muncul, batas SPAWN_RATE di 30)
+            SPAWN_RATE = Math.max(30, SPAWN_RATE - 10);
         }
 
         if (score >= 1000 && gameState !== 'WIN') {
@@ -396,7 +399,7 @@ function handleInput() {
 
     } else if (gameState === 'PLAYING') {
         croc.jump();
-    } else if (gameState === 'GAME_OVER') {
+    } else if (gameState === 'GAME_OVER' || gameState === 'WIN') {
         resetGame();
     }
 }
@@ -407,7 +410,7 @@ window.addEventListener('keydown', (e) => {
 
 window.addEventListener('mousedown', (e) => {
     if (e.target.id === 'mute-btn') return;
-    if (e.target.closest('#title-screen') || e.target.closest('#game-over-screen')) return;
+    if (e.target.closest('#title-screen') || e.target.closest('#game-over-screen') || e.target.closest('#win-screen')) return;
     handleInput();
 });
 
@@ -426,6 +429,11 @@ document.getElementById('title-screen').addEventListener('mousedown', (e) => {
 });
 
 document.getElementById('game-over-screen').addEventListener('mousedown', (e) => {
+    e.stopPropagation();
+    handleInput();
+});
+
+document.getElementById('win-screen').addEventListener('mousedown', (e) => {
     e.stopPropagation();
     handleInput();
 });

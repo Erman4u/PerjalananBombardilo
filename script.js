@@ -13,38 +13,36 @@ function resizeCanvas() {
     }
 }
 window.addEventListener('resize', resizeCanvas);
-resizeCanvas();
 
 // ─── Assets ───────────────────────────────────────────────
 const assets = {
     croc: new Image(),
     cloud: new Image(),
-    bg:  new Image(),
-    bg2: new Image(),
-    bg3: new Image(),
-    bg4: new Image(),
-    bg5: new Image(),
-    bg6: new Image()
+    rainbow: new Image(),
+    bgs: [],
+    mbgs: []
 };
 
-const BG_LIST = ['bg','bg2','bg3','bg4','bg5','bg6'];
-let currentBgIdx = 0; // index ke BG_LIST
+const BG_PREFIX = ['background', 'background2', 'background3', 'background4', 'background5', 'background6'];
+const MIRROR_PREFIX = ['mirrorbackground', 'mirrorbackground2', 'mirrorbackground3', 'mirrorbackground4', 'mirrorbackground5', 'mirrorbackground6'];
+
+for(let i=0; i<6; i++) {
+    assets.bgs.push(new Image());
+    assets.mbgs.push(new Image());
+}
+
+let currentBgIdx = 0; // index ke BG array
 
 assets.croc.src  = 'img/buaya.png';
 assets.cloud.src = 'img/awan.png';
-assets.bg.src    = 'img/background.png';
-assets.bg2.src   = 'img/background2.png';
-assets.bg3.src   = 'img/background3.png';
-assets.bg4.src   = 'img/background4.png';
-assets.bg5.src   = 'img/background5.png';
-assets.bg6.src   = 'img/background6.png';
+assets.rainbow.src = 'img/pelangi.png';
 
 let assetsLoaded = 0;
-const totalAssets = 8;
+const totalAssets = 3 + 12; // croc, cloud, rainbow + 6 bgs + 6 mbgs
 
 const checkLoad = () => {
     assetsLoaded++;
-    if (assetsLoaded === totalAssets && gameState === 'LOADING') {
+    if (assetsLoaded >= totalAssets && gameState === 'LOADING') {
         gameState = 'START';
     }
 };
@@ -52,12 +50,16 @@ const handleLoadError = () => { console.error("Asset load failed"); checkLoad();
 
 assets.croc.onload  = checkLoad; assets.croc.onerror  = handleLoadError;
 assets.cloud.onload = checkLoad; assets.cloud.onerror = handleLoadError;
-assets.bg.onload    = checkLoad; assets.bg.onerror    = handleLoadError;
-assets.bg2.onload   = checkLoad; assets.bg2.onerror   = handleLoadError;
-assets.bg3.onload   = checkLoad; assets.bg3.onerror   = handleLoadError;
-assets.bg4.onload   = checkLoad; assets.bg4.onerror   = handleLoadError;
-assets.bg5.onload   = checkLoad; assets.bg5.onerror   = handleLoadError;
-assets.bg6.onload   = checkLoad; assets.bg6.onerror   = handleLoadError;
+assets.rainbow.onload = checkLoad; assets.rainbow.onerror = handleLoadError;
+
+for(let i=0; i<6; i++) {
+    assets.bgs[i].onload = checkLoad; assets.bgs[i].onerror = handleLoadError;
+    assets.bgs[i].src = `img/${BG_PREFIX[i]}.png`;
+    
+    assets.mbgs[i].onload = checkLoad; assets.mbgs[i].onerror = handleLoadError;
+    assets.mbgs[i].src = `img/${MIRROR_PREFIX[i]}.png`;
+}
+
 
 // ─── Music & Mute ─────────────────────────────────────────
 const bgMusic = new Audio('music/backsound.mp3');
@@ -157,11 +159,28 @@ function spawnObstacle() {
     let cloudWidth  = (120 + Math.random() * 60) * Math.max(scale, 0.6);
     let cloudHeight = cloudWidth * 0.6;
     let yPos        = Math.random() * (canvas.height - cloudHeight);
-    obstacles.push({ x: canvas.width, y: yPos, width: cloudWidth, height: cloudHeight });
+    let hasRainbow  = Math.random() < 0.2; // 20% chance
+    obstacles.push({ x: canvas.width, y: yPos, width: cloudWidth, height: cloudHeight, hasRainbow: hasRainbow });
 }
 
 function drawObstacles() {
     for (let obs of obstacles) {
+        // Draw rainbow menyatu dengan awan jika ada (di bawah awan)
+        if (obs.hasRainbow && assets.rainbow.complete && assets.rainbow.naturalWidth !== 0 && assets.cloud.complete) {
+            // Ukuran pelangi disesuaikan
+            let rWidth = obs.width * 1.1; 
+            let rHeight = obs.height * 1.1;
+            let rX = obs.x - (rWidth - obs.width) / 2;
+            let rY = obs.y - (rHeight - obs.height) / 1.1; // sedikit di atas awan (awan utama di tengah)
+            ctx.drawImage(assets.rainbow, rX, rY, rWidth, rHeight);
+
+            // Awan di ujung kiri pelangi
+            ctx.drawImage(assets.cloud, rX - obs.width*0.3, rY + rHeight*0.6, obs.width*0.8, obs.height*0.8);
+            // Awan di ujung kanan pelangi
+            ctx.drawImage(assets.cloud, rX + rWidth - obs.width*0.5, rY + rHeight*0.6, obs.width*0.8, obs.height*0.8);
+        }
+
+        // Gambar awan utama di tengah (selalu ada)
         if (assets.cloud.complete && assets.cloud.naturalWidth !== 0) {
             ctx.drawImage(assets.cloud, obs.x, obs.y, obs.width, obs.height);
         } else {
@@ -184,14 +203,55 @@ function updateObstacles() {
         let obs = obstacles[i];
         obs.x  -= SCROLL_SPEED;
 
-        // Hitbox padding (lebih longgar)
-        const px = 38, py = 38;
-        if (
+        // Hitbox padding awan (lebih longgar tapi harus proporsional untuk responsif HP)
+        const px = croc.width * 0.22;
+        const py = croc.height * 0.28;
+        
+        // Cek tabrakan awan utama
+        let hitCloud = (
             croc.x + px         < obs.x + obs.width  - px &&
             croc.x + croc.width - px > obs.x + px          &&
             croc.y + py         < obs.y + obs.height - py  &&
             croc.y + croc.height - py > obs.y + py
-        ) {
+        );
+
+        let hitRainbow = false;
+        if (obs.hasRainbow) {
+            // Hitbox pelangi
+            let rWidth = obs.width * 1.1; 
+            let rHeight = obs.height * 1.1;
+            let rX = obs.x - (rWidth - obs.width) / 2;
+            let rY = obs.y - (rHeight - obs.height) / 1.1;
+
+            hitRainbow = (
+                croc.x + px         < rX + rWidth  - px &&
+                croc.x + croc.width - px > rX + px          &&
+                croc.y + py         < rY + rHeight - py  &&
+                croc.y + croc.height - py > rY + py
+            );
+
+            // Hitbox 2 awan kecil di ujung
+            let lhX = rX - obs.width*0.3; let lhY = rY + rHeight*0.6; let lhW = obs.width*0.8; let lhH = obs.height*0.8;
+            let rhX = rX + rWidth - obs.width*0.5; let rhY = rY + rHeight*0.6; let rhW = obs.width*0.8; let rhH = obs.height*0.8;
+
+            let hitLeftCloud = (
+                croc.x + px         < lhX + lhW  - px &&
+                croc.x + croc.width - px > lhX + px          &&
+                croc.y + py         < lhY + lhH - py  &&
+                croc.y + croc.height - py > lhY + py
+            );
+
+            let hitRightCloud = (
+                croc.x + px         < rhX + rhW  - px &&
+                croc.x + croc.width - px > rhX + px          &&
+                croc.y + py         < rhY + rhH - py  &&
+                croc.y + croc.height - py > rhY + py
+            );
+
+            if (hitLeftCloud || hitRightCloud) hitRainbow = true;
+        }
+
+        if (hitCloud || hitRainbow) {
             triggerGameOver();
         }
 
@@ -205,8 +265,8 @@ function updateScore() {
         score++;
         document.getElementById('score-val').innerText = score;
 
-        // Ganti background setiap 1000 poin, looping
-        let newIdx = Math.floor(score / 1000) % BG_LIST.length;
+        // Ganti background setiap 500 poin, looping
+        let newIdx = Math.floor(score / 500) % 6;
         if (newIdx !== currentBgIdx) {
             currentBgIdx = newIdx;
             bgOffset = 0; // reset scroll saat ganti bg
@@ -216,15 +276,30 @@ function updateScore() {
 
 // ─── Background ────────────────────────────────────────────
 let bgOffset = 0;
+let bgDrawWidth = 0;
+
 function drawBackground() {
-    let activeBg = assets[BG_LIST[currentBgIdx]];
-    if (activeBg && activeBg.complete && activeBg.naturalWidth !== 0) {
+    let activeBg = assets.bgs[currentBgIdx];
+    let activeMirrorBg = assets.mbgs[currentBgIdx];
+
+    if (activeBg && activeBg.complete && activeBg.naturalWidth !== 0 && activeMirrorBg && activeMirrorBg.complete) {
+        // Hitung skala agar background tidak gepeng (cover mirip css object-fit)
+        const scale = Math.max(canvas.width / activeBg.naturalWidth, canvas.height / activeBg.naturalHeight);
+        bgDrawWidth = activeBg.naturalWidth * scale;
+        const bgDrawHeight = activeBg.naturalHeight * scale;
+
         if (gameState === 'PLAYING') {
             bgOffset -= SCROLL_SPEED * 0.5;
-            if (bgOffset <= -canvas.width) bgOffset = 0;
+            if (bgOffset <= -bgDrawWidth * 2) {
+                bgOffset += bgDrawWidth * 2;
+            }
         }
-        ctx.drawImage(activeBg, bgOffset, 0, canvas.width, canvas.height);
-        ctx.drawImage(activeBg, bgOffset + canvas.width, 0, canvas.width, canvas.height);
+        
+        // Gambar 4 tile agar menutupi seluruh layar secara bergantian (bg -> mirror -> bg -> mirror)
+        ctx.drawImage(activeBg, bgOffset, 0, bgDrawWidth, bgDrawHeight);
+        ctx.drawImage(activeMirrorBg, bgOffset + bgDrawWidth, 0, bgDrawWidth, bgDrawHeight);
+        ctx.drawImage(activeBg, bgOffset + bgDrawWidth * 2, 0, bgDrawWidth, bgDrawHeight);
+        ctx.drawImage(activeMirrorBg, bgOffset + bgDrawWidth * 3, 0, bgDrawWidth, bgDrawHeight);
     } else {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
     }
@@ -340,5 +415,23 @@ function gameLoop() {
     requestAnimationFrame(gameLoop);
 }
 
-croc.reset();
-gameLoop();
+// ─── Initialization ──────────────────────────────────────────
+// Setup awal saat game baru di-load
+function initGame() {
+    resizeCanvas();
+    croc.reset();
+    gameLoop();
+}
+
+window.onload = initGame;
+
+// ─── Visibility API (Pause music saat web di background) ────
+document.addEventListener("visibilitychange", () => {
+    if (document.hidden) {
+        bgMusic.pause();
+    } else {
+        if (gameState === 'PLAYING' && !isMuted) {
+            bgMusic.play().catch(() => {});
+        }
+    }
+});

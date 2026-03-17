@@ -1,0 +1,20 @@
+{
+  "name": "mini-game",
+  "version": "1.0.0",
+  "description": "Perjalanan Bombardilo adalah sebuah mini game web berbasis _endless runner_ bergaya retro. Bantu Bombardilo sang buaya untuk melompat sejauh mungkin melintasi rintangan awan!",
+  "main": "script.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Erman4u/PerjalananBombardilo.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Erman4u/PerjalananBombardilo/issues"
+  },
+  "homepage": "https://github.com/Erman4u/PerjalananBombardilo#readme"
+}

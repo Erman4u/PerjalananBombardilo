@@ -82,12 +82,16 @@ canvas {
 
 #win-screen { border-color: #ffd700; }
 #win-screen h1 { color: #ffd700; text-shadow: 2px 2px 0 #000; }
-#win-screen a { pointer-events: auto; }
-
 #title-screen h1 {
-    margin: 0 0 14px 0;
-    font-size: 1.2em;
-    text-shadow: 3px 3px 0 #000;
+    display: none;
+}
+
+#game-logo {
+    max-width: 80%;
+    height: auto;
+    margin: 0 auto 10px auto;
+    display: block;
+    filter: drop-shadow(3px 3px 0px rgba(0,0,0,0.8));
 }
 
 .subtitle {

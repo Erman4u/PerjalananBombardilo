@@ -74,20 +74,72 @@ for(let i=0; i<6; i++) {
 }
 
 
-// ─── Music & Mute ─────────────────────────────────────────
-const bgMusic = new Audio('music/backsound.mp3');
+// ─── Music, Sound Effects & Mute (Web Audio API) ──────────
+const AudioContext = window.AudioContext || window.webkitAudioContext;
+const audioCtx = new AudioContext();
+
+let isMuted = false;
+
+const bgMusic = new Audio('music/backsound.wav');
 bgMusic.loop   = true;
 bgMusic.volume = 0.5;
 
-let isMuted = false;
 const muteBtn = document.getElementById('mute-btn');
-
 muteBtn.addEventListener('click', (e) => {
     e.stopPropagation();
     isMuted = !isMuted;
-    bgMusic.muted  = isMuted;
     muteBtn.textContent = isMuted ? '🔇' : '🔊';
 });
+
+// ─── Sound Effects (Web Audio API) ────────────────────────
+function playSound(type) {
+    if (isMuted) return;
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+    
+    const osc = audioCtx.createOscillator();
+    const gainNode = audioCtx.createGain();
+    
+    osc.connect(gainNode);
+    gainNode.connect(audioCtx.destination);
+    
+    const now = audioCtx.currentTime;
+    
+    if (type === 'jump') {
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(400, now);
+        osc.frequency.exponentialRampToValueAtTime(600, now + 0.1);
+        gainNode.gain.setValueAtTime(0.3, now);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
+        osc.start(now);
+        osc.stop(now + 0.1);
+    } else if (type === 'score') {
+        osc.type = 'square';
+        osc.frequency.setValueAtTime(600, now);
+        osc.frequency.setValueAtTime(800, now + 0.05);
+        gainNode.gain.setValueAtTime(0.1, now);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
+        osc.start(now);
+        osc.stop(now + 0.1);
+    } else if (type === 'gameover') {
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(300, now);
+        osc.frequency.exponentialRampToValueAtTime(50, now + 0.4);
+        gainNode.gain.setValueAtTime(0.3, now);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.4);
+        osc.start(now);
+        osc.stop(now + 0.4);
+    } else if (type === 'win') {
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(400, now);
+        osc.frequency.setValueAtTime(500, now + 0.1);
+        osc.frequency.setValueAtTime(600, now + 0.2);
+        osc.frequency.setValueAtTime(800, now + 0.3);
+        gainNode.gain.setValueAtTime(0.2, now);
+        gainNode.gain.linearRampToValueAtTime(0, now + 0.5);
+        osc.start(now);
+        osc.stop(now + 0.5);
+    }
+}
 
 // ─── Difficulty Settings ───────────────────────────────────
 const DIFFICULTIES = {
@@ -174,7 +226,10 @@ const croc = {
         }
     },
 
-    jump() { this.velocity = JUMP_STRENGTH; }
+    jump() { 
+        this.velocity = JUMP_STRENGTH; 
+        playSound('jump');
+    }
 };
 
 // ─── Obstacles ─────────────────────────────────────────────
@@ -332,6 +387,8 @@ function updateScore() {
     if (frames % 6 === 0) {
         score++;
         document.getElementById('score-val').innerText = score;
+        
+        if (score % 50 === 0) playSound('score');
 
         // Ganti background setiap 200 poin, looping
         let newIdx = Math.floor(score / 200) % 6;
@@ -442,6 +499,7 @@ document.getElementById('win-screen').addEventListener('mousedown', (e) => {
 function triggerGameOver() {
     if (gameState === 'GAME_OVER' || gameState === 'WIN') return;
     gameState = 'GAME_OVER';
+    playSound('gameover');
     document.getElementById('game-over-screen').classList.remove('hidden');
     document.getElementById('final-score').innerText = score;
     document.getElementById('score-display').classList.add('hidden');
@@ -450,6 +508,7 @@ function triggerGameOver() {
 function triggerWin() {
     if (gameState === 'GAME_OVER' || gameState === 'WIN') return;
     gameState = 'WIN';
+    playSound('win');
     document.getElementById('win-screen').classList.remove('hidden');
     document.getElementById('score-display').classList.add('hidden');
 }

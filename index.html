@@ -3,8 +3,10 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Perjalanan Bombardilo</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#87CEEB">
     <link rel="stylesheet" href="style.css">
     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
 </head>
@@ -13,12 +15,12 @@
     <div id="game-container">
         <canvas id="gameCanvas" width="800" height="600"></canvas>
         <div id="ui-layer">
+
             <!-- Tombol mute di pojok kanan atas -->
             <button id="mute-btn" title="Toggle Music">🔊</button>
 
             <!-- Title / Start Screen -->
             <div id="title-screen">
-                <h1>Perjalanan Bombardilo</h1>
                 <p class="subtitle">Pilih Kesulitan:</p>
                 <div id="difficulty-buttons">
                     <button class="diff-btn" data-diff="easy">🟢 Easy</button>
@@ -47,6 +49,13 @@
             </div>
         </div>
     </div>
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('sw.js');
+        });
+      }
+    </script>
     <script src="script.js"></script>
 </body>
 

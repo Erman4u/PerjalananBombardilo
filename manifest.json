@@ -1,0 +1,22 @@
+{
+  "name": "Perjalanan Bombardilo",
+  "short_name": "Bombardilo",
+  "description": "Bantu Bombardilo melewati rintangan awan, kilat, dan pelangi!",
+  "start_url": "./index.html",
+  "display": "fullscreen",
+  "background_color": "#87CEEB",
+  "theme_color": "#87CEEB",
+  "orientation": "landscape",
+  "icons": [
+    {
+      "src": "img/buaya.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "img/buaya.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
